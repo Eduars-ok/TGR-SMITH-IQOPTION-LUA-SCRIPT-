@@ -1,0 +1,98 @@
+-- Trigger SMITH - TGR-SMITH IQOPTION LUA SCRIPT v1.0 - Eduars - para Johnny :)  
+
+instrument { name = "TRG-SMITH", overlay = true, icon = "indicators:BB" }
+
+period = input (6,"front.period", input.integer,  1)
+devs   = input (2, "front.newind.stddev", input.integer, 1)
+source = input (1, "front.ind.source", input.string_selection, inputs.titles_overlay)
+fn     = input (1, "front.newind.average", input.string_selection, averages.titles)
+
+input_group {
+    "front.top line",
+    top_color = input { default = "#4BFFB5", type = input.color },
+    top_width = input { default = 1, type = input.line_width}
+}
+
+input_group {
+    "front.middle line",
+    middle_color = input { default = "#FF6C58", type = input.color },
+    middle_width = input { default = 1, type = input.line_width}
+}
+
+input_group {
+    "front.bottom line",
+    bottom_color = input { default = "#4BFFB5", type = input.color },
+    bottom_width = input { default = 1, type = input.line_width}
+}
+
+input_group {
+    "front.newind.adx.fill",
+    fill_color = input { default = rgba(75,255,181,0.08), type = input.color },
+    fill_visible = input { default = false, type = input.plot_visibility}
+}
+
+-- input de colores de Triangulos COMPRA VENTA
+input_group { "OTC - UP COLOR", call_color = input { default="#17f702", type = input.color } }
+input_group { "OTC - DOWN COLOR", put_color = input { default="#fc0303", type = input.color } }
+
+-- calculo de Bandas de Bollinger top, middle, bottom
+
+local sourceSeries = inputs [source]
+local averageFunction = averages [fn]
+
+middle = averageFunction (sourceSeries, period)
+scaled_dev = devs * stdev (sourceSeries, period)
+
+top = middle + scaled_dev
+bottom = middle - scaled_dev
+
+if fill_visible then
+    fill (bottom, top, "", fill_color)
+end
+
+-- Ploteo de Bandas de Bollinger, redundante con el indicador.
+-- plot (top, "front.top line", top_color, top_width)
+-- plot (middle, "front.middle line", middle_color, middle_width)
+-- plot (bottom, "front.bottom line", bottom_color, bottom_width)
+
+-- Define variables para "ifs" posteriores.
+screma = ema(close, 100)
+scrcci = cci(close, 14)
+scrsch = stochastic(close, 13)
+
+-- if de COMPRA
+-- Esta linea tiene los valores teoricos. Se modifican para reducir Falsos Positivos.
+-- if ((close > screma) and (scrcci < -100) and (scrsch < 0.20) and (close >= bottom)) then
+if ((close > screma) and (scrcci < -90) and (scrsch < 0.10) and (close >= bottom)) then
+    plot_shape(1,
+            'Bull_OTC',
+            shape_style.triangleup,
+            shape_size.normal,
+            call_color,
+            shape_location.belowbar,
+            0,
+            "COMPRA",
+            "#fcfc03")
+        end
+        
+--if de VENTA
+-- Esta linea tiene los valores teoricos. Se modifican para reducir Falsos Positivos.
+-- if ((close < screma) and (scrcci > 100) and (scrsch > 0.80) and (close <= top)) then
+if ((close < screma) and (scrcci > 90) and (scrsch > 0.90) and (close <= top)) then
+    plot_shape(1,
+            'Bear_OTC',
+            shape_style.triangledown,
+            shape_size.normal,
+            put_color,
+            shape_location.abovebar,
+            0,
+            "VENTA",
+            "#fcfc03")
+end                       
+
+-- LOGS para Debbug.
+-- print (top, close, bottom, scrcci, scrsch, screma)
+
+
+
+
