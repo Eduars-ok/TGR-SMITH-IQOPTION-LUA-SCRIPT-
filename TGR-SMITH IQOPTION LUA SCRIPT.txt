@@ -1,4 +1,4 @@
--- Trigger SMITH - TGR-SMITH IQOPTION LUA SCRIPT v1.0 - Eduars - para Johnny :)  
+-- Trigger SMITH - TRG-SMITH IQOPTION LUA SCRIPT v1.0 - Eduars - para Johnny :)  
 
 instrument { name = "TRG-SMITH", overlay = true, icon = "indicators:BB" }
 
